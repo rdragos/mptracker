@@ -701,13 +701,21 @@ def votes(
 
 @scraper_manager.command
 def get_romania_curata():
+    from mptracker.scraper.scraper_curata import RomaniaCurata 
+    import json
     from os import path
-    #dumping the result
+    scraper = RomaniaCurata()
+    with open(path.relpath(
+        "mptracker/placename_data/scraper-curata.json"
+        ), "w") as f:
+        json.dump(scraper.fetch_fortunes(), f)
+    return  
+    from os import path
     from difflib import SequenceMatcher as sm
     from itertools import permutations
     import json
     from mptracker.nlp import normalize
-
+    
     sql_names = [person.name for person in models.Person.query.all()]
     
     with open(path.relpath(
@@ -734,6 +742,8 @@ def get_romania_curata():
         if person != None:
             person.romania_curata = "\n".join(fortune)
             print("Found a match for ", name.encode('utf-8'))
+            if name  == 'Becali George':
+                print("\n".join(fortune).encode('utf-8'));
             sql_names.remove(name)
 
     for name, fortune in scraper_result: 
@@ -742,7 +752,7 @@ def get_romania_curata():
         
         if name_scraper in person_exceptions:
             add_person(person_exceptions[name_scraper], fortune)
-
+        
         for temporary_sqlname in sql_names:
             name_sql = normalize(temporary_sqlname)
             for perm in permutations(name_scraper.split(" ")):

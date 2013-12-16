@@ -38,6 +38,8 @@ class RomaniaCurata(Scraper):
             total_fortunes = []
 
             for fortune_index in range(len(big_fortune)):
+                if fortune_index <= 2:
+                    continue;
                 small_fortune = big_fortune.eq(fortune_index) 
                 if small_fortune('strong') == []:
                     total_fortunes.append(small_fortune.text())
