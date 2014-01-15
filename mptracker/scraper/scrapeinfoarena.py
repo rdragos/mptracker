@@ -1,6 +1,7 @@
 from pyquery import PyQuery as pq
+from mptracker.scraper.common import Scraper
 
-class Infoarena(object):
+class Infoarena(Scraper):
     index_url1 = "http://www.infoarena.ro/runda/teme_acmunibuc_2013/clasament?rankings_display_entries=50&rankings_first_entry=0"
     index_url2 = "http://www.infoarena.ro/runda/teme_acmunibuc_2013/clasament?rankings_display_entries=50&rankings_first_entry=50"
     #30 - 59 5
@@ -23,10 +24,12 @@ class Infoarena(object):
 
     score_set = []
     user_set = []
+    
+    use_cdep_opener = False
 
     def fetch_users(self, index_url):
         #url_set = self.fetch_urls(self.index_url)
-        page = pq(index_url)
+        page = self.fetch_url(index_url)
         users = page('table.sortable .normal-user .username a') 
         scores = page('table.sortable').find('.number.score')
         
@@ -38,7 +41,7 @@ class Infoarena(object):
             self.score_set.append(scores.eq(i).text())
         
     def getscore(self, problems, user): 
-        user_page = pq('http://www.infoarena.ro/runda/teme_acmunibuc_2013?user='+user)  
+        user_page = self.fetch_url('http://www.infoarena.ro/runda/teme_acmunibuc_2013?user='+user)  
         results = []
         for problem in problems:
             v = user_page('table.sortable .task a') 
@@ -49,6 +52,7 @@ class Infoarena(object):
                 )
             #print (problem, user)
             v =  pq(v[0]).parent().parent().parent().children().eq(3).text()
+            print (problem, v)
             if v == 'N/A':
                 results.append(0)
             else:
@@ -60,16 +64,21 @@ class Infoarena(object):
         self.fetch_users(self.index_url1)
         self.fetch_users(self.index_url2)
         user_set = self.user_set
-        total_problems = self.problems;
 
+        total_problems = self.problems;
+        #from pdb import set_trace; set_trace()
         f = open("archive.csv", "w")
 
         for user_index in range(len(user_set)):
+            """
             if (user_index % 5 == 0):
                 from time import sleep
                 sleep(20)
-
+            """
             user = user_set[user_index]
+            if user != 'andreiv':
+                continue
+
             v = []
             for problem_group in total_problems:
                 points = 0
@@ -82,6 +91,12 @@ class Infoarena(object):
                     if temp_score > 60:
                         points += 10
                 L = len(problem_group)
+                
+                if user == 'brainwashed20':
+                    if L == 1:
+                        v.append(11)
+                        continue
+
                 grade = points / (2.0 * L * 10 / 3.0) 
                 grade *= 10
                 v.append(min([11,grade]))
